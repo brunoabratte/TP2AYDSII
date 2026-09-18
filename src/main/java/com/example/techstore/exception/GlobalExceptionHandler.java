@@ -7,9 +7,15 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 
 import com.example.techstore.response.ApiResponse;
 
+import io.micrometer.core.ipc.http.HttpSender.Response;
+
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.http.ResponseEntity;
+import org.springframework.boot.micrometer.observation.autoconfigure.ObservationProperties.Http;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -17,20 +23,27 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> manejarValidacion(MethodArgumentNotValidException ex) {
-        String mensajeError = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .findFirst()
-                .orElse("Error de validación");
+        public ResponseEntity<ApiResponse<Object>> manejarValidacion(MethodArgumentNotValidException ex) {
+
+        Map<String, String> errores = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        error -> error.getField(),
+                        error -> error.getDefaultMessage(),
+                        (mensajeExistente, mensajeNuevo) -> mensajeExistente
+                ));
 
         ApiResponse<Object> respuesta = new ApiResponse<>(
                 HttpStatus.BAD_REQUEST.value(),
-                mensajeError,
-                null
+                "Hay errores de validación",
+                errores
         );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
-    }
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(respuesta);
+        }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ApiResponse<Object>> manejarValidacionLista(HandlerMethodValidationException ex) {
@@ -102,17 +115,53 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(IllegalArgumentException.class)
-        public ResponseEntity<ApiResponse<Void>> manejarArgumentoInvalido(
-                    IllegalArgumentException ex) {
-                
+        public ResponseEntity<ApiResponse<Void>> manejarIllegalArgumentException(
+                IllegalArgumentException ex) {
+
                 ApiResponse<Void> respuesta = new ApiResponse<>(
                         400,
                         ex.getMessage(),
                         null
+                        );
+
+                return ResponseEntity.badRequest().body(respuesta);
+        }
+
+        @ExceptionHandler(MonedaInvalidaException.class)
+        public ResponseEntity<ApiResponse<Object>> manejarMonedaInvalida(
+                MonedaInvalidaException ex) {
+                        ApiResponse<Object> respuesta = new ApiResponse<>(
+                                400,
+                                ex.getMessage(), 
+                                null
+                        );
+
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+        }
+
+        @ExceptionHandler(ServicioExternoException.class)
+        public ResponseEntity<ApiResponse<Object>> manejarServicioExterno(ServicioExternoException ex) {
+                ApiResponse<Object> respuesta = new ApiResponse<>(
+                        502,
+                        ex.getMessage(),
+                        null
                 );
-        
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(respuesta);
+
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(respuesta);
+        }
+
+        @ExceptionHandler(EmailDuplicadoException.class)
+        public ResponseEntity<ApiResponse<Object>> manejarEmailDuplicado(
+                EmailDuplicadoException ex) {
+
+        ApiResponse<Object> respuesta = new ApiResponse<>(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(respuesta);
         }
 }

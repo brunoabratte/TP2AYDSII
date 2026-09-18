@@ -32,7 +32,7 @@ public class Producto {
         this.stock = stock;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
