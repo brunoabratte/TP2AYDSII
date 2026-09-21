@@ -95,6 +95,7 @@ public class DivisaService {
         return conversion;
     }
 
+    //para guardar la conversion en el historial
     public void guardarEnHistorial(ConversionResponse conversion) {
 
         HistorialConversion historial = new HistorialConversion();
