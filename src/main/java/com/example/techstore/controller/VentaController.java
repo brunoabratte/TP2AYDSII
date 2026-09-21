@@ -56,9 +56,33 @@ public class VentaController {
         return ResponseEntity.ok(respuesta);
         }
 
+    @Operation(
+        summary = "Aplicar descuento a las ventas",
+        description = "Aplica un porcentaje de descuento a cada venta y calcula el total con descuento"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Descuento aplicado correctamente"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "Datos de ventas inválidos o porcentaje de descuento fuera del rango permitido"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "500",
+            description = "Error interno del servidor"
+        )
+    })    
     @PostMapping("/aplicar-descuento")
     public ResponseEntity<ApiResponse<DescuentoResponseDTO>> aplicarDescuento(
             @RequestBody @Valid List<VentaDTO> ventas,
+
+             @Parameter(
+                description = "Porcentaje de descuento. Debe estar entre 0 y 100",
+                example = "10",
+                required = true
+            )
             @RequestParam double porcentaje) {
 
         if (porcentaje < 0 || porcentaje > 100) {

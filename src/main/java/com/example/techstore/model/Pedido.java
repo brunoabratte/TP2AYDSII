@@ -2,6 +2,8 @@ package com.example.techstore.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "pedidos")
@@ -19,6 +21,9 @@ public class Pedido {
     private LocalDate fechaPedido;
 
     private String estado;
+
+    @OneToMany (mappedBy = "pedido")
+    private List<DetallePedido> detalles = new ArrayList<>();
 
     public Integer getId() {
         return id;
@@ -50,5 +55,13 @@ public class Pedido {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public List<DetallePedido> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<DetallePedido> detalles) {
+        this.detalles = detalles;
     }
 }

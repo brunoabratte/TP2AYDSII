@@ -70,8 +70,12 @@ public class CatalogoService {
 
     public Producto agregarProducto(Producto producto) {
 
-        producto.setId(productos.size() + 1);
-        productos.add(producto);
+        int nuevoId = productos.stream()
+            .mapToInt(Producto::getId)
+            .max()
+            .orElse(0) + 1;
+            
+        producto.setId(nuevoId);
 
         return producto;
     }
